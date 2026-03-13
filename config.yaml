@@ -1,0 +1,45 @@
+semantic_index:
+  base_dir: /Users/you/.semantic-index
+  lancedb_dir: /Users/you/.semantic-index/lancedb
+
+  models:
+    text_embedder: sentence-transformers/all-MiniLM-L6-v2
+    image_embedder: sentence-transformers/clip-ViT-B-32
+
+  text_embedding_dim: 384
+  image_embedding_dim: 512
+
+  splitter:
+    split_by: sentence
+    split_length: 3
+    split_overlap: 1
+
+  watch_paths:
+    - /Users/you/Documents
+    - /Users/you/Notes
+    - /Users/you/Pictures
+
+  file_types:
+    text:
+      - "*.pdf"
+      - "*.md"
+      - "*.docx"
+      - "*.ods"
+    image:
+      - "*.jpg"
+      - "*.jpeg"
+      - "*.png"
+      - "*.webp"
+      - "*.tiff"
+
+  exclude:
+    - "*/node_modules/*"
+    - "*/.git/*"
+    - "*/.*"
+    - "*/Trash/*"
+    - "*/.obsidian/*"
+    - "*/.dropbox.cache/*"
+
+  watcher:
+    debounce_seconds: 5
+    batch_size: 50

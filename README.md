@@ -4,57 +4,40 @@ Local semantic search over personal files -- PDFs, Markdown, DOCX, spreadsheets,
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Claude Code / Desktop                    │
-│                        (MCP client)                          │
-└──────────────┬──────────────────────────────┬────────────────┘
-               │ semantic_search()            │ index_path()
-               ▼                              ▼
-┌──────────────────────────────────────────────────────────────┐
-│                    Hayhooks MCP Server                        │
-│              (stdio transport, auto-started)                 │
-│                                                              │
-│  ┌────────────────────┐    ┌─────────────────────────────┐   │
-│  │  semantic_search    │    │  index_path                  │   │
-│  │  PipelineWrapper    │    │  PipelineWrapper             │   │
-│  │                     │    │                              │   │
-│  │  all-MiniLM-L6-v2  │    │  PyPDF / pymupdf (fallback) │   │
-│  │  clip-ViT-B-32     │    │  MarkdownToDocument          │   │
-│  └────────┬───────────┘    │  DOCXToDocument              │   │
-│           │                │  ODSToDocument (custom)       │   │
-│           │                │  DocumentSplitter             │   │
-│           │                │  all-MiniLM-L6-v2 (text)     │   │
-│           │                │  clip-ViT-B-32 (images)      │   │
-│           │                └────────────┬─────────────────┘   │
-│           │                             │                     │
-│           └──────────┬──────────────────┘                     │
-└──────────────────────┼───────────────────────────────────────┘
-                       │
-                       ▼
-          ┌────────────────────────┐
-          │        LanceDB         │
-          │   (file-based, local)  │
-          │                        │
-          │  text_documents        │
-          │  384-dim vectors       │
-          │  content, file_path,   │
-          │  file_type, chunk_idx  │
-          │                        │
-          │  image_documents       │
-          │  512-dim vectors       │
-          │  file_path, file_type  │
-          └────────────────────────┘
-                       ▲
-                       │
-┌──────────────────────┼───────────────────────────────────────┐
-│              File Watcher Daemon                              │
-│         (watchdog + debounce timer)                           │
-│                                                              │
-│  Monitors configured directories for file changes.           │
-│  On create/modify: debounce 5s, then index via pipeline.     │
-│  On delete: immediately remove entries from LanceDB.         │
-└──────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Client["Claude Code / Desktop<br/>(MCP client)"]
+
+    Client -- "semantic_search()" --> Server
+    Client -- "index_path()" --> Server
+
+    subgraph Server["Hayhooks MCP Server · stdio transport, auto-started"]
+        direction LR
+        subgraph Search["semantic_search · PipelineWrapper"]
+            S1["all-MiniLM-L6-v2"]
+            S2["clip-ViT-B-32"]
+        end
+        subgraph Index["index_path · PipelineWrapper"]
+            I1["PyPDF / pymupdf &#40;fallback&#41;"]
+            I2["MarkdownToDocument"]
+            I3["DOCXToDocument"]
+            I4["ODSToDocument &#40;custom&#41;"]
+            I5["DocumentSplitter"]
+            I6["all-MiniLM-L6-v2 &#40;text&#41;"]
+            I7["clip-ViT-B-32 &#40;images&#41;"]
+        end
+    end
+
+    Server --> DB
+
+    subgraph DB["LanceDB · file-based, local"]
+        T1["**text_documents**<br/>384-dim vectors<br/>content, file_path,<br/>file_type, chunk_idx"]
+        T2["**image_documents**<br/>512-dim vectors<br/>file_path, file_type"]
+    end
+
+    Watcher["File Watcher Daemon<br/>watchdog + debounce timer<br/><br/>Monitors configured directories.<br/>On create/modify: debounce 5 s, then index.<br/>On delete: immediately remove from LanceDB."]
+
+    Watcher -. "index / delete" .-> DB
 ```
 
 ## Features

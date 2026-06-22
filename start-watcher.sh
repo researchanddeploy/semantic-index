@@ -1,9 +1,10 @@
 #!/bin/bash
-exec >> /Users/you/.semantic-index/logs/watcher-stderr.log 2>&1
+APP_DIR="/Users/you/.semantic-index"
+
+exec >> "$APP_DIR/logs/watcher-stderr.log" 2>&1
 echo "=== Starting watcher at $(date) ==="
-export PATH="/Users/you/.semantic-index/.venv/bin:/usr/local/bin:/usr/bin:/bin"
-export VIRTUAL_ENV="/Users/you/.semantic-index/.venv"
-export PYTHONPATH="/Users/you/.semantic-index"
-export HOME="/Users/you"
-cd /Users/you/.semantic-index
-exec /Users/you/.semantic-index/.venv/bin/python3 /Users/you/.semantic-index/watcher.py
+export PATH="$APP_DIR/.venv/bin:/usr/local/bin:/usr/bin:/bin"
+export VIRTUAL_ENV="$APP_DIR/.venv"
+export PYTHONPATH="$APP_DIR"
+cd "$APP_DIR"
+exec "$APP_DIR/.venv/bin/python3" "$APP_DIR/watcher.py"

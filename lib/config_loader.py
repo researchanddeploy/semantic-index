@@ -16,7 +16,7 @@ def load_config(path: Path | str | None = None) -> dict[str, Any]:
 
     Args:
         path: Optional override path to config file. Defaults to
-              /Users/you/.semantic-index/config.yaml
+              config.yaml located at the repository root (see CONFIG_PATH).
 
     Returns:
         Parsed configuration dictionary.
